@@ -7,7 +7,7 @@ bool hasInit = false;
 
 void Init()
 {
-	//init the tables
+	//init the tables 
 	int val = 1;
 	powTable[0] = val;
 	for (int i = 1; i < 256; i++)
@@ -522,7 +522,13 @@ bool RS_Decode(unsigned char* wholeOut, unsigned char* out, unsigned char* data,
 		}
 		if(debug) cout << "errors corrected!" << endl;
 	}
-	memcpy(wholeOut, msg.coef, sizeof(char) * (k + nsym));
-	memcpy(out, msg.coef, sizeof(char) * k);
+	if (wholeOut)
+	{
+		memcpy(wholeOut, msg.coef, sizeof(char) * (k + nsym));
+	}
+	if (out)
+	{
+		memcpy(out, msg.coef, sizeof(char) * k);
+	}
 	return true;
 }
