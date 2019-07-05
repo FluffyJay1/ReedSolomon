@@ -58,7 +58,7 @@ GaloisField::GaloisField(int fieldPower)
 	powTable[0] = val;
 	logTable[0] = 0;
 	logTable[1] = 0;
-	for (unsigned int i = 1; i <= this->characteristic; i++)
+	for (unsigned int i = 1; i < this->characteristic; i++)
 	{
 		val <<= 1;
 		if (val > this->characteristic)
@@ -72,6 +72,16 @@ GaloisField::GaloisField(int fieldPower)
 	{
 		powTable[i] = powTable[i - this->characteristic];
 	}
+	/*
+	for (unsigned int i = 0; i < this->characteristic; i++)
+	{
+		cout << "2^" << i << "=" << powTable[i] << endl;
+	}
+	for (unsigned int i = 0; i < this->characteristic; i++)
+	{
+		cout << "log" << i << "=" << logTable[i] << endl;
+	}
+	*/
 }
 
 GaloisField::~GaloisField()
@@ -520,23 +530,33 @@ bool ReedSolomon::findErrorLocator(Poly* out, Poly* synd, int nsym, Poly* eraseL
 	return true;
 }
 
-void ReedSolomon::findErrors(vector<unsigned int>* out, Poly* errLoc, int n)
+bool ReedSolomon::findErrors(vector<unsigned int>* out, Poly* errLoc, int n)
 {
 	int errs = errLoc->n - 1;
 	Poly revErrLoc;
 	Poly_Reverse(&revErrLoc, errLoc);
-	if (errLoc->n == 2)
+	if (errLoc->n == 1)
+	{
+		//do something special here? idk
+	}
+	else if (errLoc->n == 2)
 	{ //linear equation
 		out->push_back(this->gf.logTable[this->gf.div(errLoc->coef[0], errLoc->coef[1])]);
-	} else
+	} 
+	else
 	{
 		Poly_ChienSearch(out, &revErrLoc, n, &this->gf);
 	}
 	//map to string pos
 	for (unsigned int i = 0; i < out->size(); i++)
 	{
+		if (out->at(i) >= n) //clearly something messed up
+		{
+			return false;
+		}
 		(*out)[i] = n - out->at(i) - 1;
 	}
+	return true;
 }
 
 void ReedSolomon::forneySyndromes(Poly* out, Poly* synd, vector<unsigned int>* pos, int n)
@@ -582,18 +602,26 @@ bool ReedSolomon::decode(unsigned int* wholeOut, unsigned int* out, unsigned int
 		if(debug) cout << "errors detected, locating" << endl;
 		Poly fsynd, errLoc;
 		this->forneySyndromes(&fsynd, &synd, erasePos, k + nsym);
-		this->findErrorLocator(&errLoc, &fsynd, nsym, nullptr, erasePos ? erasePos->size() : 0);
-		vector<unsigned int> pos(0);
-		this->findErrors(&pos, &errLoc, k + nsym);
-		if (!pos.size())
+		bool canLocate = this->findErrorLocator(&errLoc, &fsynd, nsym, nullptr, erasePos ? erasePos->size() : 0);
+		if (!canLocate)
 		{
-			if(debug) cout << "errors unable to be located" << endl;
+			if (debug) cout << "too many errors to locate!" << endl;
+			return false;
+		}
+		vector<unsigned int> pos(0);
+		canLocate = this->findErrors(&pos, &errLoc, k + nsym);
+		if (!canLocate || !(pos.size() || (erasePos && erasePos->size())))
+		{
+			if(debug) cout << "errors unable to be located!" << endl;
 			return false;
 		}
 		if (debug)
 		{
-			cout << "errors detected at ";
-			for_each(pos.begin(), pos.end(), [](unsigned int e) {cout << (int)e << ", "; });
+			if (pos.size())
+			{
+				cout << "additional errors detected at ";
+				for_each(pos.begin(), pos.end(), [](unsigned int e) {cout << (int)e << ", "; });
+			}
 			cout << "correcting" << endl;
 		}
 		if (erasePos)
@@ -603,18 +631,18 @@ bool ReedSolomon::decode(unsigned int* wholeOut, unsigned int* out, unsigned int
 		bool success = this->correctErrata(&msg, &synd, &pos);
 		if (!success)
 		{
-			if(debug) cout << "decode failure" << endl;
+			if(debug) cout << "decode failure!" << endl;
 			return false;
 		}
-		if(debug) cout << "errors corrected!" << endl;
+		if(debug) cout << "errors corrected" << endl;
 	}
 	if (wholeOut)
 	{
-		memcpy(wholeOut, msg.coef, sizeof(int)* (k + nsym));
+		memcpy(wholeOut, msg.coef, sizeof(int) * (k + nsym));
 	}
 	if (out)
 	{
-		memcpy(out, msg.coef, sizeof(int)* k);
+		memcpy(out, msg.coef, sizeof(int) * k);
 	}
 	return true;
 }

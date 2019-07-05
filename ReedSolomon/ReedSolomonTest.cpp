@@ -8,7 +8,7 @@ using namespace std;
 
 void test()
 {
-	int bits = 10, k = 10, nsym = 7, ncorrupt = 3;
+	int bits = 10, k = 10, nsym = 7, ncorrupt = 10;
 	unsigned int data1[] = { 0x40, 0xd2, 0x75, 0x47, 0x76, 0x17, 0x32, 0x06, 0x27, 0x26, 0x96, 0xc6, 0xc6, 0x96, 0x70, 0xec };
 	Poly msg(k, data1);
 	Poly a(k + nsym, data1);
@@ -19,7 +19,7 @@ void test()
 	cout << endl << "Encoded message: " << endl;
 	a.print();
 	cout << endl;
-	vector<unsigned char> possPos, corrPos;
+	vector<unsigned int> possPos, corrPos;
 	for (int i = 0; i < k + nsym; i++)
 	{
 		possPos.push_back(i);
@@ -28,7 +28,7 @@ void test()
 	for (int i = 0; i < ncorrupt; i++)
 	{
 		int randInd = rand() % possPos.size();
-		vector<unsigned char>::iterator it = next(possPos.begin(), randInd);
+		vector<unsigned int>::iterator it = next(possPos.begin(), randInd);
 		corrPos.push_back(possPos[randInd]);
 		possPos.erase(it);
 	}
@@ -45,11 +45,13 @@ void test()
 	if (!success)
 	{
 		cout << "Decoding failed!" << endl;
+	} else
+	{
+		cout << "After decoding: " << endl;
+		a.print();
+		cout << endl << "Decoded message: " << endl;
+		msg.print();
 	}
-	cout << "After decoding: " << endl;
-	a.print();
-	cout << endl << "Decoded message: " << endl;
-	msg.print();
 }
 
 int main()

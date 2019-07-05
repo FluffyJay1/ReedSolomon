@@ -113,7 +113,7 @@ public:
 	void findErrorEvaluator(Poly* out, Poly* synd, Poly* errLoc, int nsym);
 	bool correctErrata(Poly* msg, Poly* synd, vector<unsigned int>* errPos);
 	bool findErrorLocator(Poly* out, Poly* synd, int nsym, Poly* eraseLoc, int eraseCount);
-	void findErrors(vector<unsigned int>* out, Poly* errLoc, int n);
+	bool findErrors(vector<unsigned int>* out, Poly* errLoc, int n);
 	void forneySyndromes(Poly* out, Poly* synd, vector<unsigned int>* pos, int n);
 	bool decode(unsigned int* wholeOut, unsigned int* out, unsigned int* data, int k, int nsym, vector<unsigned int>* erasePos, bool debug);
 };
