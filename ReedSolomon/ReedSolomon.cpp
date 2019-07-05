@@ -58,7 +58,7 @@ GaloisField::GaloisField(int fieldPower)
 	powTable[0] = val;
 	logTable[0] = 0;
 	logTable[1] = 0;
-	for (unsigned int i = 1; i < this->characteristic; i++)
+	for (unsigned int i = 1; i <= this->characteristic; i++)
 	{
 		val <<= 1;
 		if (val > this->characteristic)
@@ -68,7 +68,7 @@ GaloisField::GaloisField(int fieldPower)
 		powTable[i] = (unsigned int)val;
 		logTable[(unsigned int)val] = i;
 	}
-	for (unsigned int i = this->characteristic; i < this->characteristic * 2; i++)
+	for (unsigned int i = this->characteristic; i < (this->characteristic + 1) * 2; i++)
 	{
 		powTable[i] = powTable[i - this->characteristic];
 	}
