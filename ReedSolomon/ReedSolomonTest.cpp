@@ -8,7 +8,7 @@ using namespace std;
 
 void test()
 {
-	int bits = 10, k = 10, nsym = 7, ncorrupt = 10;
+	int bits = 10, k = 10, nsym = 7, ncorrupt = 3;
 	unsigned int data1[] = { 0x40, 0xd2, 0x75, 0x47, 0x76, 0x17, 0x32, 0x06, 0x27, 0x26, 0x96, 0xc6, 0xc6, 0x96, 0x70, 0xec };
 	Poly msg(k, data1);
 	Poly a(k + nsym, data1);
