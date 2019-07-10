@@ -115,7 +115,7 @@ inline unsigned int GaloisField::mult(unsigned int a, unsigned int b)
 }
 inline unsigned int GaloisField::div(unsigned int a, unsigned int b)
 {
-	return(b == 0) ? -1 : this->powTable[this->logTable[a] - this->logTable[b] + this->characteristic];
+	return a == 0 ? 0 : (b == 0) ? -1 : this->powTable[this->logTable[a] - this->logTable[b] + this->characteristic];
 }
 
 inline unsigned int GaloisField::pow(unsigned int x, unsigned int power)
