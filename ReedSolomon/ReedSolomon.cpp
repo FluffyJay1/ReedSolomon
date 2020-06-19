@@ -547,6 +547,11 @@ bool ReedSolomon::findErrors(vector<unsigned int>* out, Poly* errLoc, int n)
 	{
 		Poly_ChienSearch(out, &revErrLoc, n, &this->gf);
 	}
+	if (out->size() != errs)
+	{
+		// Too many (or few) errors found by Chien Search for the errata locator polynomial!
+		return false;
+	}
 	//map to string pos
 	for (unsigned int i = 0; i < out->size(); i++)
 	{
@@ -608,7 +613,7 @@ bool ReedSolomon::decode(unsigned int* wholeOut, unsigned int* out, unsigned int
 			if (debug) cout << "too many errors to locate!" << endl;
 			return false;
 		}
-		vector<unsigned int> pos(0);
+		vector<unsigned int> pos;
 		canLocate = this->findErrors(&pos, &errLoc, k + nsym);
 		if (!canLocate || !(pos.size() || (erasePos && erasePos->size())))
 		{
