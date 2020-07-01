@@ -16,8 +16,8 @@ void FindPrimePolys(ostream* out, int fieldPower, int limit)
 {
 	GaloisField gf(fieldPower);
 	int primesFound = 0;
-	unsigned int fieldCharacteristic = (1 << fieldPower) - 1, fieldCharacteristicNext = (1 << (fieldPower + 1)) - 1;
-	for (unsigned int i = fieldCharacteristic + 2; (fieldCharacteristicNext == 0 ? i > 0 : i < fieldCharacteristicNext); i += 2)
+	RS_WORD fieldCharacteristic = ((RS_WORD)1 << fieldPower) - 1, fieldCharacteristicNext = ((RS_WORD)1 << (fieldPower + 1)) - 1;
+	for (RS_WORD i = fieldCharacteristic + 2; (fieldCharacteristicNext == 0 ? i > 0 : i < fieldCharacteristicNext); i += 2)
 	{
 		unsigned int x = 2; //skip first iteration
 		bool conflict = false;
@@ -48,32 +48,32 @@ void FindPrimePolys(ostream* out, int fieldPower, int limit)
 
 GaloisField::GaloisField(int fieldPower)
 {
-	this->characteristic = (1 << fieldPower) - 1;
+	this->characteristic = ((RS_WORD)1 << fieldPower) - 1;
 	this->fieldPower = fieldPower;
 	this->primitivePoly = primes[fieldPower];
 	//init the tables 
 	unsigned int val = 1;
-	this->powTable = (unsigned int*)malloc(sizeof(int) * (this->characteristic + 1) * 2);
-	this->logTable = (unsigned int*)malloc(sizeof(int) * (this->characteristic + 1));
+	this->powTable = (RS_WORD*)malloc(sizeof(RS_WORD) * (this->characteristic + 1) * 2);
+	this->logTable = (RS_WORD*)malloc(sizeof(RS_WORD) * (this->characteristic + 1));
 	powTable[0] = val;
 	logTable[0] = 0;
 	logTable[1] = 0;
-	for (unsigned int i = 1; i < this->characteristic; i++)
+	for (RS_WORD i = 1; i < this->characteristic; i++)
 	{
 		val <<= 1;
 		if (val > this->characteristic)
 		{
 			val ^= this->primitivePoly;
 		}
-		powTable[i] = (unsigned int)val;
-		logTable[(unsigned int)val] = i;
+		powTable[i] = (RS_WORD)val;
+		logTable[(RS_WORD)val] = i;
 	}
-	for (unsigned int i = this->characteristic; i < (this->characteristic + 1) * 2; i++)
+	for (RS_WORD i = this->characteristic; i < this->characteristic * 2; i++)
 	{
 		powTable[i] = powTable[i - this->characteristic];
 	}
 	/*
-	for (unsigned int i = 0; i < this->characteristic; i++)
+	for (unsigned int i = 0; i < this->characteristic * 2; i++)
 	{
 		cout << "2^" << i << "=" << powTable[i] << endl;
 	}
@@ -90,9 +90,9 @@ GaloisField::~GaloisField()
 	free(this->logTable);
 }
 
-unsigned int GaloisField::multNoLUT(int a, int b)
+RS_WORD GaloisField::multNoLUT(RS_WORD a, RS_WORD b)
 {
-	unsigned int ret = 0;
+	RS_WORD ret = 0;
 	while (b > 0)
 	{
 		if (b & 1) //if odd
@@ -109,26 +109,26 @@ unsigned int GaloisField::multNoLUT(int a, int b)
 	return ret;
 }
 
-inline unsigned int GaloisField::mult(unsigned int a, unsigned int b)
+inline RS_WORD GaloisField::mult(RS_WORD a, RS_WORD b)
 {
 	return (a == 0 || b == 0) ? 0 : this->powTable[this->logTable[a] + this->logTable[b]];
 }
-inline unsigned int GaloisField::div(unsigned int a, unsigned int b)
+inline RS_WORD GaloisField::div(RS_WORD a, RS_WORD b)
 {
 	return a == 0 ? 0 : (b == 0) ? -1 : this->powTable[this->logTable[a] - this->logTable[b] + this->characteristic];
 }
 
-inline unsigned int GaloisField::pow(unsigned int x, unsigned int power)
+inline RS_WORD GaloisField::pow(RS_WORD x, RS_WORD power)
 {
 	return this->powTable[(this->logTable[x] * power) % this->characteristic];
 }
 
-inline unsigned int GaloisField::inv(unsigned int x)
+inline RS_WORD GaloisField::inv(RS_WORD x)
 {
 	return this->powTable[this->characteristic - this->logTable[x]];
 }
 
-inline unsigned int GaloisField::sqrt(unsigned int x)
+inline RS_WORD GaloisField::sqrt(RS_WORD x)
 {
 	return logTable[x] % 2 ? this->powTable[(logTable[x] + this->characteristic) / 2] : this->powTable[logTable[x] / 2];
 }
@@ -138,7 +138,7 @@ Poly::Poly()
 	this->init();
 }
 
-Poly::Poly(int n, unsigned int* data)
+Poly::Poly(int n, RS_WORD* data)
 {
 	this->init();
 	this->setCopy(n, data);
@@ -158,7 +158,7 @@ void Poly::init()
 	this->coef = nullptr;
 }
 
-void Poly::setCopy(int n, unsigned int* coef)
+void Poly::setCopy(int n, RS_WORD* coef)
 {
 	if (n > this->n)
 	{
@@ -166,19 +166,19 @@ void Poly::setCopy(int n, unsigned int* coef)
 		{
 			free(this->coef);
 		}
-		this->coef = (unsigned int*)malloc(sizeof(int) * n);
+		this->coef = (RS_WORD*)malloc(sizeof(RS_WORD) * n);
 	}
 	this->n = n;
 	if (coef)
 	{
-		memcpy(this->coef, coef, sizeof(int) * n);
+		memcpy(this->coef, coef, sizeof(RS_WORD) * n);
 	} else
 	{
-		memset(this->coef, 0, sizeof(int) * n);
+		memset(this->coef, 0, sizeof(RS_WORD) * n);
 	}
 }
 
-void Poly::setRef(int n, unsigned int* coef)
+void Poly::setRef(int n, RS_WORD* coef)
 {
 	if (this->coef)
 	{
@@ -193,11 +193,11 @@ void Poly::print()
 	cout << "Poly(n=" << this->n << ")";
 	if (this->n > 0)
 	{
-		cout << "[" << setw(3) << hex << (int)this->coef[0];
+		cout << "[" << setw(3) << hex << (RS_WORD)this->coef[0];
 	}
 	for (int i = 1; i < this->n; i++)
 	{
-		cout << ", " << setw(3) << hex << (int)this->coef[i];
+		cout << ", " << setw(3) << hex << (RS_WORD)this->coef[i];
 	}
 	if (this->n > 0)
 	{
@@ -205,7 +205,7 @@ void Poly::print()
 	}
 }
 
-Poly* Poly_Create(int n, unsigned int* coef)
+Poly* Poly_Create(int n, RS_WORD* coef)
 {
 	Poly* poly = (Poly*)malloc(sizeof(Poly));
 	poly->init();
@@ -222,8 +222,8 @@ void Poly_Free(Poly* poly)
 void Poly_Add(Poly* out, Poly* a, Poly* b)
 {
 	int n = MAX(a->n, b->n);
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int) * n);
-	memset(temp, 0, sizeof(int) * n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD) * n);
+	memset(temp, 0, sizeof(RS_WORD) * n);
 	for (int i = 0; i < a->n; i++)
 	{
 		temp[i + n - a->n] = a->coef[i];
@@ -235,7 +235,7 @@ void Poly_Add(Poly* out, Poly* a, Poly* b)
 	out->setRef(n, temp);
 }
 
-void Poly_Scale(Poly* out, Poly* in, unsigned int scale, GaloisField* gf)
+void Poly_Scale(Poly* out, Poly* in, RS_WORD scale, GaloisField* gf)
 {
 	if (out == in)
 	{
@@ -245,7 +245,7 @@ void Poly_Scale(Poly* out, Poly* in, unsigned int scale, GaloisField* gf)
 		}
 	} else
 	{
-		unsigned int* temp = (unsigned int*)malloc(sizeof(int) * in->n);
+		RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD) * in->n);
 		for (int i = 0; i < in->n; i++)
 		{
 			temp[i] = gf->mult(in->coef[i], scale);
@@ -257,8 +257,8 @@ void Poly_Scale(Poly* out, Poly* in, unsigned int scale, GaloisField* gf)
 void Poly_Mult(Poly* out, Poly* a, Poly* b, GaloisField* gf)
 {
 	int n = a->n + b->n - 1;
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int) * n);
-	memset(temp, 0, sizeof(int) * n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD) * n);
+	memset(temp, 0, sizeof(RS_WORD) * n);
 	for (int i = 0; i < a->n; i++)
 	{
 		for (int j = 0; j < b->n; j++)
@@ -271,13 +271,13 @@ void Poly_Mult(Poly* out, Poly* a, Poly* b, GaloisField* gf)
 
 void Poly_Div(Poly* result, Poly* quotient, Poly* remainder, Poly* a, Poly* b, GaloisField* gf)
 {
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* a->n);
-	unsigned int normalizer = b->coef[0];
-	memcpy(temp, a->coef, sizeof(int) * a->n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD)* a->n);
+	RS_WORD normalizer = b->coef[0];
+	memcpy(temp, a->coef, sizeof(RS_WORD) * a->n);
 	for (int i = 0; i < a->n - b->n + 1; i++)
 	{
 		temp[i] = gf->div(temp[i], normalizer);
-		unsigned int coef = temp[i];
+		RS_WORD coef = temp[i];
 		if (coef != 0)
 		{
 			for (int j = 1; j < b->n; j++)
@@ -305,9 +305,9 @@ void Poly_Div(Poly* result, Poly* quotient, Poly* remainder, Poly* a, Poly* b, G
 	free(temp);
 }
 
-unsigned int Poly_Eval(Poly* poly, unsigned int x, GaloisField* gf)
+RS_WORD Poly_Eval(Poly* poly, RS_WORD x, GaloisField* gf)
 {
-	unsigned int y = poly->coef[0];
+	RS_WORD y = poly->coef[0];
 	for (int i = 1; i < poly->n; i++)
 	{
 		y = gf->mult(y, x) ^ poly->coef[i];
@@ -318,11 +318,11 @@ unsigned int Poly_Eval(Poly* poly, unsigned int x, GaloisField* gf)
 void Poly_ChienSearch(vector<unsigned int>* out, Poly* poly, int max, GaloisField* gf)
 {
 	//this seems unnecessary because all multiplications are performed via lookup table anyway
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* poly->n);
-	memcpy(temp, poly->coef, sizeof(int) * poly->n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD)* poly->n);
+	memcpy(temp, poly->coef, sizeof(RS_WORD) * poly->n);
 	for (int i = 0; i < max; i++)
 	{
-		unsigned int sum = 0;
+		RS_WORD sum = 0;
 		for (int j = 0; j < poly->n; j++)
 		{
 			sum ^= temp[j];
@@ -339,33 +339,33 @@ void Poly_ChienSearch(vector<unsigned int>* out, Poly* poly, int max, GaloisFiel
 void Poly_Pad(Poly* poly, int left, int right)
 {
 	int n = poly->n + left + right;
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* n);
-	memset(temp, 0, sizeof(int) * left);
-	memcpy(temp + left, poly->coef, sizeof(int) * poly->n);
-	memset(temp + (left + poly->n), 0, sizeof(int) * right);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD)* n);
+	memset(temp, 0, sizeof(RS_WORD) * left);
+	memcpy(temp + left, poly->coef, sizeof(RS_WORD) * poly->n);
+	memset(temp + (left + poly->n), 0, sizeof(RS_WORD) * right);
 	poly->setRef(n, temp);
 }
 
 void Poly_Trim(Poly* poly, int left, int right)
 {
 	int n = poly->n - left - right;
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* n);
-	memcpy(temp, poly->coef + left, sizeof(int) * n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD)* n);
+	memcpy(temp, poly->coef + left, sizeof(RS_WORD) * n);
 	poly->setRef(n, temp);
 }
 
 void Poly_Append(Poly* out, Poly* a, Poly* b)
 {
 	int n = a->n + b->n;
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* n);
-	memcpy(temp, a->coef, sizeof(int)* a->n);
-	memcpy(temp + a->n, b->coef, sizeof(int)* b->n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD)* n);
+	memcpy(temp, a->coef, sizeof(RS_WORD)* a->n);
+	memcpy(temp + a->n, b->coef, sizeof(RS_WORD)* b->n);
 	out->setRef(n, temp);
 }
 
 void Poly_Reverse(Poly* out, Poly* in)
 {
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* in->n);
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD)* in->n);
 	for (int i = 0; i < in->n; i++)
 	{
 		temp[i] = in->coef[in->n - i - 1];
@@ -391,20 +391,20 @@ void ReedSolomon::createGenerator(Poly* out, int nsym)
 	}
 }
 
-void ReedSolomon::encode(unsigned int* out, unsigned int* data, int k, int nsym)
+void ReedSolomon::encode(RS_WORD* out, RS_WORD* data, int k, int nsym)
 {
 	Poly msg(k, data);
 	Poly generator, remainder;
 	this->createGenerator(&generator, nsym);
 	Poly_Pad(&msg, 0, nsym);
 	Poly_Div(nullptr, nullptr, &remainder, &msg, &generator, &this->gf);
-	memcpy(out, data, sizeof(int) * k);
-	memcpy(out + k, remainder.coef, sizeof(int) * remainder.n);
+	memcpy(out, data, sizeof(RS_WORD) * k);
+	memcpy(out + k, remainder.coef, sizeof(RS_WORD) * remainder.n);
 }
 
 void ReedSolomon::calcSyndromes(Poly* out, Poly* msg, int nsym)
 {
-	unsigned int* temp = (unsigned int*)malloc(sizeof(int)* (nsym + 1));
+	RS_WORD* temp = (RS_WORD*)malloc(sizeof(RS_WORD) * (nsym + 1));
 	for (int i = 0; i < nsym; i++)
 	{
 		temp[nsym - i - 1] = Poly_Eval(msg, this->gf.powTable[i], &this->gf);
@@ -431,7 +431,7 @@ void ReedSolomon::findErrataLocator(Poly* out, vector<unsigned int>* errPos)
 	out->coef[0] = 1;
 	Poly factor(2, nullptr);
 	factor.coef[1] = 1;
-	for (int i : *errPos)
+	for (unsigned int i : *errPos)
 	{
 		factor.coef[0] = this->gf.powTable[i];
 		Poly_Mult(out, out, &factor, &this->gf);
@@ -447,7 +447,7 @@ void ReedSolomon::findErrorEvaluator(Poly* out, Poly* synd, Poly* errLoc, int ns
 bool ReedSolomon::correctErrata(Poly* msg, Poly* synd, vector<unsigned int>* errPos)
 {
 	vector<unsigned int> coefPos(0);
-	for (int i : *errPos)
+	for (unsigned int i : *errPos)
 	{
 		coefPos.push_back(msg->n - 1 - i);
 	}
@@ -455,17 +455,17 @@ bool ReedSolomon::correctErrata(Poly* msg, Poly* synd, vector<unsigned int>* err
 	this->findErrataLocator(&errLoc, &coefPos);
 	this->findErrorEvaluator(&errEval, synd, &errLoc, errLoc.n); //TODO determine if correct
 	//Poly_Reverse(errEval, errEval); //reverse it for later use
-	vector<unsigned int> x(coefPos.size());
-	for (unsigned int i = 0; i < x.size(); i++)
+	vector<RS_WORD> x(coefPos.size());
+	for (int i = 0; i < x.size(); i++)
 	{
 		x[i] = this->gf.powTable[coefPos[i]]; //TODO determine if correct
 	}
 	Poly e(msg->n, nullptr);
-	for (unsigned int i = 0; i < x.size(); i++)
+	for (int i = 0; i < x.size(); i++)
 	{
-		unsigned int xi = this->gf.powTable[this->gf.characteristic - coefPos[i]]; //TODO determine if equivalent to GaloisField::Inv(x[i])
-		unsigned int errLocPrime = 1;
-		for (unsigned int j = 0; j < x.size(); j++)
+		RS_WORD xi = this->gf.powTable[this->gf.characteristic - coefPos[i]]; //TODO determine if equivalent to GaloisField::Inv(x[i])
+		RS_WORD errLocPrime = 1;
+		for (int j = 0; j < x.size(); j++)
 		{
 			if (j != i)
 			{
@@ -476,7 +476,7 @@ bool ReedSolomon::correctErrata(Poly* msg, Poly* synd, vector<unsigned int>* err
 		{
 			return false;
 		}
-		unsigned int y = this->gf.mult(x[i], Poly_Eval(&errEval, xi, &this->gf)); //errEval is still reversed from earlier
+		RS_WORD y = this->gf.mult(x[i], Poly_Eval(&errEval, xi, &this->gf)); //errEval is still reversed from earlier
 		//TODO determine if equivalent to GaloisField::Mult(GaloisField::Pow(xi, 1), y)
 		e.coef[errPos->at(i)] = this->gf.div(y, errLocPrime); //magnitude
 	}
@@ -487,7 +487,7 @@ bool ReedSolomon::correctErrata(Poly* msg, Poly* synd, vector<unsigned int>* err
 bool ReedSolomon::findErrorLocator(Poly* out, Poly* synd, int nsym, Poly* eraseLoc, int eraseCount)
 {
 	//this spits out a polynomial in reverse order but i dont know why
-	unsigned int init = 1;
+	RS_WORD init = 1;
 	Poly errLoc(1, &init);
 	Poly oldLoc(1, &init);
 	Poly temp;
@@ -500,7 +500,7 @@ bool ReedSolomon::findErrorLocator(Poly* out, Poly* synd, int nsym, Poly* eraseL
 	for (int i = nsym - eraseCount - 1; i >= 0; i--)
 	{
 		int K = i + syndShift + eraseCount;
-		unsigned int delta = synd->coef[K];
+		RS_WORD delta = synd->coef[K];
 		for (int j = 1; j < errLoc.n; j++)
 		{
 			delta ^= this->gf.mult(errLoc.coef[errLoc.n - j - 1], synd->coef[K + j]);
@@ -553,7 +553,7 @@ bool ReedSolomon::findErrors(vector<unsigned int>* out, Poly* errLoc, int n)
 		return false;
 	}
 	//map to string pos
-	for (unsigned int i = 0; i < out->size(); i++)
+	for (RS_WORD i = 0; i < out->size(); i++)
 	{
 		if (out->at(i) >= n) //clearly something messed up
 		{
@@ -571,8 +571,8 @@ void ReedSolomon::forneySyndromes(Poly* out, Poly* synd, vector<unsigned int>* p
 	{
 		for (unsigned int i : *pos)
 		{
-			unsigned int rev = n - i - 1;
-			unsigned int x = this->gf.powTable[rev];
+			RS_WORD rev = (RS_WORD)n - i - 1;
+			RS_WORD x = this->gf.powTable[rev];
 			for (int j = fsynd.n - 2; j >= 0; j--)
 			{
 				fsynd.coef[j + 1] = this->gf.mult(fsynd.coef[j + 1], x) ^ fsynd.coef[j];
@@ -583,7 +583,7 @@ void ReedSolomon::forneySyndromes(Poly* out, Poly* synd, vector<unsigned int>* p
 	out->setCopy(fsynd.n, fsynd.coef);
 }
 
-bool ReedSolomon::decode(unsigned int* wholeOut, unsigned int* out, unsigned int* data, int k, int nsym, vector<unsigned int>* erasePos, bool debug)
+bool ReedSolomon::decode(RS_WORD* wholeOut, RS_WORD* out, RS_WORD* data, int k, int nsym, vector<unsigned int>* erasePos, bool debug)
 {
 	Poly synd;
 	Poly msg(k + nsym, data);
@@ -643,11 +643,11 @@ bool ReedSolomon::decode(unsigned int* wholeOut, unsigned int* out, unsigned int
 	}
 	if (wholeOut)
 	{
-		memcpy(wholeOut, msg.coef, sizeof(int) * (k + nsym));
+		memcpy(wholeOut, msg.coef, sizeof(RS_WORD) * (k + nsym));
 	}
 	if (out)
 	{
-		memcpy(out, msg.coef, sizeof(int) * k);
+		memcpy(out, msg.coef, sizeof(RS_WORD) * k);
 	}
 	return true;
 }

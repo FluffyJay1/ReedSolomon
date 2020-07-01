@@ -9,7 +9,7 @@ using namespace std;
 void test()
 {
 	int bits = 8, k = 16, nsym = 10;
-	unsigned int data1[] = { 0x40, 0xd2, 0x75, 0x47, 0x76, 0x17, 0x32, 0x06, 0x27, 0x26, 0x96, 0xc6, 0xc6, 0x96, 0x70, 0xec };
+	RS_WORD data1[] = { 0x40, 0xd2, 0x75, 0x47, 0x76, 0x17, 0x32, 0x06, 0x27, 0x26, 0x96, 0xc6, 0xc6, 0x96, 0x70, 0xec };
 	Poly msg(k, data1);
 	Poly a(k + nsym, data1);
 	ReedSolomon rs(bits);
@@ -26,8 +26,6 @@ void test()
 	corrPos.push_back(4);
 	corrPos.push_back(5);
 	corrPos.push_back(6);
-	corrPos.push_back(7);
-	corrPos.push_back(8);
 	srand(time(0));
 	for (unsigned char i : erasePos)
 	{
@@ -55,7 +53,7 @@ void test()
 
 bool test(int bits, int k, int nsym, int ncorr, bool print, bool* unmatch, int erasures)
 {
-	unsigned int *originalData = (unsigned int*)malloc(sizeof(int) * (k + nsym));
+	RS_WORD *originalData = (RS_WORD*)malloc(sizeof(RS_WORD) * (k + nsym));
 	for (int i = 0; i < k; i++)
 	{
 		originalData[i] = rand() % (1 << bits);
@@ -203,9 +201,9 @@ void testFalsePositiveRate(int k, int maxNsym, int bits)
 
 int main()
 {
-	test(8, 10, 6, 4, true, nullptr, 2);
-	//testConfig(12, 9, 6);
+	//test(8, 10, 6, 4, true, nullptr, 2);
+	testConfig(12, 9, 6);
 	//testFalsePositiveRate(12, 9, 6);
 	//test();
-	//FindPrimePolys(&cout, 16, 10);
+	FindPrimePolys(&cout, 12, 10);
 }

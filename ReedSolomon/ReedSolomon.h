@@ -12,7 +12,6 @@
 #define MIN(x, y) (x < y ? x : y)
 #define NULL 0
 
-
 //defining prime polynomials in GF^x for your use
 #define PRIM(x) PRIM_ ## x
 #define PRIM_0 0
@@ -48,6 +47,10 @@
 #define PRIM_30 0x40000053
 #define PRIM_31 0x80000009
 
+// The underlying data type used can be changed depending on your space requirements
+// just change this typedef
+typedef unsigned long RS_WORD;
+
 using namespace std;
 
 void FindPrimePolys(ostream* out, int fieldPower, int limit);
@@ -55,17 +58,18 @@ void FindPrimePolys(ostream* out, int fieldPower, int limit);
 class GaloisField
 {
 public:
-	unsigned int* powTable, *logTable;
-	int fieldPower, characteristic, primitivePoly;
+	RS_WORD* powTable, *logTable;
+	int fieldPower;
+	RS_WORD characteristic, primitivePoly;
 	
 	GaloisField(int fieldPower);
 	~GaloisField();
-	unsigned int multNoLUT(int a, int b);
-	inline unsigned int mult(unsigned int a, unsigned int b);
-	inline unsigned int div(unsigned int a, unsigned int b);
-	inline unsigned int pow(unsigned int x, unsigned int power);
-	inline unsigned int inv(unsigned int x);
-	inline unsigned int sqrt(unsigned int x);
+	RS_WORD multNoLUT(RS_WORD a, RS_WORD b);
+	inline RS_WORD mult(RS_WORD a, RS_WORD b);
+	inline RS_WORD div(RS_WORD a, RS_WORD b);
+	inline RS_WORD pow(RS_WORD x, RS_WORD power);
+	inline RS_WORD inv(RS_WORD x);
+	inline RS_WORD sqrt(RS_WORD x);
 };
 
 void Init();
@@ -75,24 +79,24 @@ class Poly
 {
 public:
 	int n;
-	unsigned int* coef;
+	RS_WORD* coef;
 	Poly();
-	Poly(int n, unsigned int* coef);
+	Poly(int n, RS_WORD* coef);
 	~Poly();
 
 	void init();
-	void setCopy(int n, unsigned int* coef);
-	void setRef(int n, unsigned int* coef);
+	void setCopy(int n, RS_WORD* coef);
+	void setRef(int n, RS_WORD* coef);
 	void print();
 };
 
-Poly* Poly_Create(int n, unsigned int* coef);
+Poly* Poly_Create(int n, RS_WORD* coef);
 void Poly_Free(Poly* poly);
 void Poly_Add(Poly* out, Poly* a, Poly* b);
-void Poly_Scale(Poly* out, Poly* in, unsigned int scale, GaloisField* gf);
+void Poly_Scale(Poly* out, Poly* in, RS_WORD scale, GaloisField* gf);
 void Poly_Mult(Poly* out, Poly* a, Poly* b, GaloisField* gf);
 void Poly_Div(Poly* result, Poly* quotient, Poly* remainder, Poly* a, Poly* b, GaloisField* gf);
-unsigned int Poly_Eval(Poly* poly, unsigned int x, GaloisField* gf);
+RS_WORD Poly_Eval(Poly* poly, RS_WORD x, GaloisField* gf);
 void Poly_ChienSearch(vector<unsigned int>* out, Poly* poly, int max, GaloisField* gf);
 void Poly_Pad(Poly* poly, int left, int right);
 void Poly_Trim(Poly* poly, int left, int right);
@@ -106,7 +110,7 @@ public:
 	ReedSolomon(int fieldPower);
 
 	void createGenerator(Poly* out, int nsym);
-	void encode(unsigned int* out, unsigned int* data, int k, int nsym);
+	void encode(RS_WORD* out, RS_WORD* data, int k, int nsym);
 	void calcSyndromes(Poly* out, Poly* msg, int nsym);
 	bool checkSyndromes(Poly* synd);
 	void findErrataLocator(Poly* out, vector<unsigned int>* errorPos);
@@ -115,6 +119,6 @@ public:
 	bool findErrorLocator(Poly* out, Poly* synd, int nsym, Poly* eraseLoc, int eraseCount);
 	bool findErrors(vector<unsigned int>* out, Poly* errLoc, int n);
 	void forneySyndromes(Poly* out, Poly* synd, vector<unsigned int>* pos, int n);
-	bool decode(unsigned int* wholeOut, unsigned int* out, unsigned int* data, int k, int nsym, vector<unsigned int>* erasePos, bool debug);
+	bool decode(RS_WORD* wholeOut, RS_WORD* out, RS_WORD* data, int k, int nsym, vector<unsigned int>* erasePos, bool debug);
 };
 
