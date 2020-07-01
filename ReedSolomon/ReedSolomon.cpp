@@ -53,7 +53,7 @@ GaloisField::GaloisField(int fieldPower)
 	this->primitivePoly = primes[fieldPower];
 	//init the tables 
 	unsigned int val = 1;
-	this->powTable = (RS_WORD*)malloc(sizeof(RS_WORD) * (this->characteristic + 1) * 2);
+	this->powTable = (RS_WORD*)malloc(sizeof(RS_WORD) * this->characteristic * 2);
 	this->logTable = (RS_WORD*)malloc(sizeof(RS_WORD) * (this->characteristic + 1));
 	powTable[0] = val;
 	logTable[0] = 0;
@@ -77,7 +77,7 @@ GaloisField::GaloisField(int fieldPower)
 	{
 		cout << "2^" << i << "=" << powTable[i] << endl;
 	}
-	for (unsigned int i = 0; i < this->characteristic; i++)
+	for (unsigned int i = 0; i < this->characteristic + 1; i++)
 	{
 		cout << "log" << i << "=" << logTable[i] << endl;
 	}

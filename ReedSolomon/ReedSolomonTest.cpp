@@ -202,8 +202,8 @@ void testFalsePositiveRate(int k, int maxNsym, int bits)
 int main()
 {
 	//test(8, 10, 6, 4, true, nullptr, 2);
-	testConfig(12, 9, 6);
-	//testFalsePositiveRate(12, 9, 6);
+	testConfig(20, 9, 16);
+	testFalsePositiveRate(12, 9, 6);
 	//test();
-	FindPrimePolys(&cout, 12, 10);
+	//FindPrimePolys(&cout, 5, 10);
 }
