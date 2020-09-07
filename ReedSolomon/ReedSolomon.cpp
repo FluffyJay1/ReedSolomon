@@ -1,7 +1,7 @@
 #include "ReedSolomon.h"
 using namespace std;
 
-int primes[] = {
+unsigned int primes[] = {
 	PRIM(0), PRIM(1), PRIM(2), PRIM(3), 
 	PRIM(4), PRIM(5), PRIM(6), PRIM(7), 
 	PRIM(8), PRIM(9), PRIM(10), PRIM(11), 

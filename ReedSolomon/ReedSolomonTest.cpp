@@ -147,7 +147,7 @@ void testConfig(int k, int nsym, int bits)
 		for (int i = 0; i < 1000; i++)
 		{
 			bool fp = false;
-			bool success = test(bits, k, nsym, errors, false, &fp, 5);
+			bool success = test(bits, k, nsym, errors, false, &fp, 0);
 			if (success)
 			{
 				successes++;
@@ -201,9 +201,10 @@ void testFalsePositiveRate(int k, int maxNsym, int bits)
 
 int main()
 {
-	//test(8, 10, 6, 4, true, nullptr, 2);
-	testConfig(20, 9, 16);
-	testFalsePositiveRate(12, 9, 6);
+	srand(time(NULL));
+	//test(3, 6, 2, 1, true, nullptr, 0);
+	testConfig(2, 4, 3);
+	//testFalsePositiveRate(12, 9, 6);
 	//test();
 	//FindPrimePolys(&cout, 5, 10);
 }
