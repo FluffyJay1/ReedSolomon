@@ -1,4 +1,5 @@
 #include "ReedSolomon.h"
+#include <string.h>
 using namespace std;
 
 unsigned int primes[] = {
